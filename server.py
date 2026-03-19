@@ -8,7 +8,6 @@ To change your admin password, find ADMIN_PASSWORD below and update it,
 OR set an environment variable called ADMIN_PASSWORD on your hosting service.
 """
 
-import cgi
 import hashlib
 import http.cookies
 import http.server
@@ -864,24 +863,68 @@ class HypnosisHandler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(b)
 
+    def parse_multipart(self):
+        """Parse multipart/form-data without the deprecated cgi module."""
+        ct = self.headers.get("Content-Type", "")
+        boundary = None
+        for part in ct.split(";"):
+            part = part.strip()
+            if part.startswith("boundary="):
+                boundary = part[9:].strip().strip('"').encode()
+                break
+        if not boundary:
+            return {}
+        length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(length)
+        fields = {}
+        delimiter = b"--" + boundary
+        parts = body.split(delimiter)
+        for part in parts[1:]:
+            if part.startswith(b"--"):
+                break
+            if part.startswith(b"\r\n"):
+                part = part[2:]
+            if b"\r\n\r\n" not in part:
+                continue
+            headers_raw, content = part.split(b"\r\n\r\n", 1)
+            if content.endswith(b"\r\n"):
+                content = content[:-2]
+            headers = {}
+            for line in headers_raw.decode("utf-8", errors="replace").split("\r\n"):
+                if ":" in line:
+                    k, v = line.split(":", 1)
+                    headers[k.strip().lower()] = v.strip()
+            disposition = headers.get("content-disposition", "")
+            name = None
+            filename = None
+            for item in disposition.split(";"):
+                item = item.strip()
+                if item.startswith("name="):
+                    name = item[5:].strip('"')
+                elif item.startswith("filename="):
+                    filename = item[9:].strip('"')
+            if name:
+                fields[name] = {"content": content, "filename": filename}
+        return fields
+
     def handle_upload(self):
         ct = self.headers.get("Content-Type", "")
         if "multipart/form-data" not in ct:
             self.send_error_json("Expected multipart/form-data"); return
-        env = {"REQUEST_METHOD": "POST", "CONTENT_TYPE": ct, "CONTENT_LENGTH": self.headers.get("Content-Length", "0")}
-        form = cgi.FieldStorage(fp=self.rfile, headers=self.headers, environ=env)
-        if "file" not in form:
+        fields = self.parse_multipart()
+        if "file" not in fields:
             self.send_error_json("No file field"); return
-        file_item = form["file"]
-        original = file_item.filename or "track.mp3"
+        file_field = fields["file"]
+        original = file_field.get("filename") or "track.mp3"
         safe = "".join(c for c in original if c.isalnum() or c in "._- ")
         base, ext = os.path.splitext(safe)
         unique = f"{base}_{new_id()}{ext}"
         UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
         dest = UPLOADS_DIR / unique
         with open(dest, "wb") as f:
-            f.write(file_item.file.read())
-        title = form.getvalue("title", "") or base
+            f.write(file_field["content"])
+        title_field = fields.get("title", {})
+        title = (title_field.get("content", b"").decode("utf-8", errors="replace").strip()) or base
         db = load_db()
         track = {"id": new_id(), "title": title, "filename": unique, "url": f"/uploads/{unique}", "size": dest.stat().st_size}
         db["tracks"].append(track)
