@@ -855,7 +855,7 @@ class HypnosisHandler(http.server.BaseHTTPRequestHandler):
         if path.startswith("/listen/"):
             token = path[len("/listen/"):]
             db = load_db()
-            client = next((c for c in db["clients"] if c["token"] == token), None)
+            client = next((p for p in db.get("programs", []) if p["token"] == token), None)
             if not client:
                 self.send_html(NOT_FOUND_HTML, 404)
                 return
