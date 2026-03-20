@@ -4,6 +4,7 @@ Hypnosis & Meditation Studio — Single-File Server
 Brenda Johnston | brenda-johnston.onrender.com
 """
 
+import base64
 import hashlib
 import http.cookies
 import http.server
@@ -414,6 +415,12 @@ PLAYER_HTML = """
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Brenda Johnston">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon.png">
 <title>Your Hypnosis Program</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -426,38 +433,15 @@ body{
   display:flex;
   flex-direction:column;
   align-items:center;
+  padding-bottom:80px;
 }
-header{
-  width:100%;
-  padding:28px 20px 10px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:8px;
-}
+header{width:100%;padding:28px 20px 10px;display:flex;flex-direction:column;align-items:center;gap:8px}
 header img{height:46px;filter:drop-shadow(0 0 10px rgba(238,0,116,0.35))}
-.studio-label{
-  font-size:11px;
-  font-weight:500;
-  letter-spacing:0.2em;
-  text-transform:uppercase;
-  color:var(--text);
-  opacity:0.8;
-}
-.client-name{
-  font-size:22px;
-  font-weight:700;
-  letter-spacing:0.04em;
-  margin:14px 0 26px;
-  text-align:center;
-  padding:0 20px;
-}
+.studio-label{font-size:11px;font-weight:500;letter-spacing:0.2em;text-transform:uppercase;color:var(--text);opacity:0.8}
+.client-name{font-size:22px;font-weight:700;letter-spacing:0.04em;margin:14px 0 26px;text-align:center;padding:0 20px}
 /* Big art circle */
 .vinyl{
-  width:268px;
-  height:268px;
-  border-radius:50%;
-  flex-shrink:0;
+  width:268px;height:268px;border-radius:50%;flex-shrink:0;
   background:
     radial-gradient(circle at 50% 50%,#000 0%,#000 6%,transparent 7%),
     radial-gradient(ellipse at 28% 38%,rgba(26,107,196,0.95) 0%,transparent 42%),
@@ -468,132 +452,69 @@ header img{height:46px;filter:drop-shadow(0 0 10px rgba(238,0,116,0.35))}
     radial-gradient(ellipse at 62% 78%,rgba(139,0,85,0.65) 0%,transparent 34%),
     radial-gradient(ellipse at 40% 55%,rgba(88,28,135,0.5) 0%,transparent 50%),
     #0d0020;
-  box-shadow:
-    0 0 0 5px #0a0a0a,
-    0 0 0 9px #1c1c1c,
-    0 0 0 13px #0a0a0a,
-    0 16px 70px rgba(139,0,85,0.6),
-    0 0 120px rgba(139,0,85,0.2);
+  box-shadow:0 0 0 5px #0a0a0a,0 0 0 9px #1c1c1c,0 0 0 13px #0a0a0a,0 16px 70px rgba(139,0,85,0.6),0 0 120px rgba(139,0,85,0.2);
   transition:transform 0.1s;
   margin-bottom:26px;
 }
 .vinyl.spinning{animation:spin 6s linear infinite}
 @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-/* Track title */
-.track-title-wrap{
-  text-align:center;
-  margin-bottom:16px;
-  padding:0 24px;
-}
-.track-title-wrap h3{
-  font-size:19px;
-  font-weight:700;
-  letter-spacing:0.02em;
-}
+.track-title-wrap{text-align:center;margin-bottom:16px;padding:0 24px}
+.track-title-wrap h3{font-size:19px;font-weight:700;letter-spacing:0.02em}
 /* Progress */
-.progress-wrap{
-  width:100%;
-  max-width:340px;
-  padding:0 24px;
-  margin-bottom:22px;
-}
-.progress-row{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
+.progress-wrap{width:100%;max-width:340px;padding:0 24px;margin-bottom:22px}
+.progress-row{display:flex;align-items:center;gap:10px}
 .time{font-size:12px;color:var(--muted);min-width:34px}
 .time.right{text-align:right}
-.progress-bar{
-  flex:1;
-  height:4px;
-  background:rgba(255,255,255,0.15);
-  border-radius:2px;
-  cursor:pointer;
-  position:relative;
-}
-.progress-fill{
-  height:100%;
-  background:linear-gradient(90deg,#ee0074,#ff4da6);
-  border-radius:2px;
-  transition:width 0.1s;
-  position:relative;
-}
-.progress-fill::after{
-  content:'';
-  position:absolute;
-  right:-5px;top:50%;
-  transform:translateY(-50%);
-  width:10px;height:10px;
-  border-radius:50%;
-  background:#fff;
-  box-shadow:0 0 6px rgba(238,0,116,0.7);
-}
+.progress-bar{flex:1;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;cursor:pointer;position:relative}
+.progress-fill{height:100%;background:linear-gradient(90deg,#ee0074,#ff4da6);border-radius:2px;transition:width 0.1s;position:relative}
+.progress-fill::after{content:'';position:absolute;right:-5px;top:50%;transform:translateY(-50%);width:10px;height:10px;border-radius:50%;background:#fff;box-shadow:0 0 6px rgba(238,0,116,0.7)}
 /* Controls */
-.controls{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:20px;
-  margin-bottom:32px;
-}
-.ctrl-btn{
-  background:none;
-  border:none;
-  cursor:pointer;
-  color:rgba(255,240,247,0.65);
-  padding:8px;
-  border-radius:50%;
-  transition:.15s;
-  display:flex;align-items:center;justify-content:center;
-}
+.controls{display:flex;align-items:center;justify-content:center;gap:20px;margin-bottom:18px}
+.ctrl-btn{background:none;border:none;cursor:pointer;color:rgba(255,240,247,0.65);padding:8px;border-radius:50%;transition:.15s;display:flex;align-items:center;justify-content:center}
 .ctrl-btn:hover{color:#fff;background:rgba(238,0,116,0.12)}
 .ctrl-btn.active{color:var(--pink)}
 .ctrl-btn svg{width:22px;height:22px}
-.play-btn{
-  background:none;
-  border:2px solid rgba(255,255,255,0.82);
-  cursor:pointer;
-  border-radius:50%;
-  width:58px;height:58px;
-  display:flex;align-items:center;justify-content:center;
-  transition:.2s;
-  color:#fff;
-}
+.play-btn{background:none;border:2px solid rgba(255,255,255,0.82);cursor:pointer;border-radius:50%;width:58px;height:58px;display:flex;align-items:center;justify-content:center;transition:.2s;color:#fff}
 .play-btn:hover{background:rgba(255,255,255,0.1);transform:scale(1.06)}
 .play-btn svg{width:26px;height:26px}
+/* Sleep timer */
+.sleep-wrap{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:28px}
+.sleep-icon{color:var(--muted);display:flex;align-items:center}
+.sleep-icon svg{width:16px;height:16px}
+.sleep-label{font-size:12px;color:var(--muted);min-width:70px;letter-spacing:0.04em}
+.sleep-label.active{color:var(--pink)}
+.sleep-opts{display:flex;gap:6px}
+.sleep-opt{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:20px;color:var(--muted);font-size:11px;padding:4px 11px;cursor:pointer;transition:.15s;font-family:inherit}
+.sleep-opt:hover{color:var(--text);border-color:rgba(255,255,255,0.3)}
+.sleep-opt.active{background:rgba(238,0,116,0.18);border-color:var(--pink);color:var(--pink)}
 /* Track list */
-.track-list{
-  width:100%;
-  max-width:480px;
-  padding:0 20px 48px;
-  display:flex;
-  flex-direction:column;
-}
-.track-item{
-  display:flex;
-  align-items:center;
-  gap:16px;
-  padding:13px 6px;
-  cursor:pointer;
-  border-bottom:1px solid rgba(255,255,255,0.07);
-  transition:.15s;
-}
+.track-list{width:100%;max-width:480px;padding:0 20px 16px;display:flex;flex-direction:column}
+.track-item{display:flex;align-items:center;gap:16px;padding:13px 6px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.07);transition:.15s}
 .track-item:last-child{border-bottom:none}
 .track-item:hover .track-play-btn{border-color:rgba(255,240,247,0.8)}
 .track-item.active .track-play-btn{border-color:var(--pink)}
 .track-item.active .track-play-btn svg{color:var(--pink)}
-.track-play-btn{
-  width:44px;height:44px;
-  border-radius:50%;
-  border:2px solid rgba(255,240,247,0.42);
-  display:flex;align-items:center;justify-content:center;
-  flex-shrink:0;
-  transition:.15s;
-}
+.track-play-btn{width:44px;height:44px;border-radius:50%;border:2px solid rgba(255,240,247,0.42);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s}
 .track-play-btn svg{width:16px;height:16px;color:rgba(255,240,247,0.75)}
 .track-name{font-size:15px;font-weight:700;flex:1;letter-spacing:0.01em}
 .track-dur{font-size:13px;color:var(--muted);min-width:38px;text-align:right}
+/* Install banner */
+.install-banner{
+  position:fixed;bottom:0;left:0;right:0;
+  background:rgba(18,0,26,0.97);
+  border-top:1px solid rgba(238,0,116,0.3);
+  padding:14px 18px;
+  display:none;align-items:center;gap:12px;
+  z-index:100;
+  backdrop-filter:blur(12px);
+}
+.install-banner .install-icon{font-size:22px;flex-shrink:0}
+.install-banner .install-text{flex:1}
+.install-banner .install-text strong{display:block;font-size:14px;margin-bottom:2px}
+.install-banner .install-text span{font-size:12px;color:var(--muted)}
+.install-banner .install-text .share-icon{display:inline-block;width:14px;height:14px;vertical-align:middle;margin:0 2px}
+.install-btn{background:var(--pink);border:none;border-radius:20px;color:#fff;font-size:12px;font-weight:600;padding:6px 14px;cursor:pointer;white-space:nowrap}
+.dismiss-btn{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px;line-height:1;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -642,13 +563,50 @@ header img{height:46px;filter:drop-shadow(0 0 10px rgba(238,0,116,0.35))}
     </svg>
   </button>
 </div>
+<!-- Sleep timer -->
+<div class="sleep-wrap">
+  <span class="sleep-icon">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75 9.75 9.75 0 018.25 6a9.718 9.718 0 01.25-2.252A9.75 9.75 0 1021.752 15z"/>
+    </svg>
+  </span>
+  <span class="sleep-label" id="sleep-label">Sleep timer</span>
+  <div class="sleep-opts">
+    <button class="sleep-opt active" id="s0" onclick="setSleep(0)">Off</button>
+    <button class="sleep-opt" id="s30" onclick="setSleep(30)">30m</button>
+    <button class="sleep-opt" id="s45" onclick="setSleep(45)">45m</button>
+    <button class="sleep-opt" id="s60" onclick="setSleep(60)">60m</button>
+  </div>
+</div>
 <div class="track-list" id="track-list"></div>
+<!-- iOS install banner -->
+<div class="install-banner" id="ios-banner">
+  <span class="install-icon">&#127968;</span>
+  <div class="install-text">
+    <strong>Add to Home Screen</strong>
+    <span>Tap <svg class="share-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg> then “Add to Home Screen”</span>
+  </div>
+  <button class="dismiss-btn" onclick="dismissBanner()">&times;</button>
+</div>
+<!-- Android install banner -->
+<div class="install-banner" id="android-banner">
+  <span class="install-icon">&#127968;</span>
+  <div class="install-text">
+    <strong>Add to Home Screen</strong>
+    <span>Install for quick access anytime</span>
+  </div>
+  <button class="install-btn" onclick="installApp()">Install</button>
+  <button class="dismiss-btn" onclick="dismissBanner()">&times;</button>
+</div>
 <audio id="audio"></audio>
 <script>
 const token=location.pathname.split('/').pop();
 const audio=document.getElementById('audio');
 let tracks=[],cur=0,ready=false,looping=false,shuffling=false;
+let sleepTimer=null,sleepRemaining=0;
+let deferredPrompt=null;
 
+// ── Data load ────────────────────────────────────────────────
 fetch('/api/client/'+token).then(r=>r.json()).then(data=>{
   if(data.error){document.getElementById('client-name').textContent='Program not found';return;}
   document.getElementById('client-name').textContent=data.clientName;
@@ -659,6 +617,7 @@ fetch('/api/client/'+token).then(r=>r.json()).then(data=>{
   ready=true;
 });
 
+// ── Render track list ────────────────────────────────────────
 function renderList(){
   const el=document.getElementById('track-list');
   el.innerHTML=tracks.map((t,i)=>`
@@ -684,12 +643,14 @@ function loadDurations(){
   });
 }
 
+// ── Load & play track ────────────────────────────────────────
 function loadTrack(i,autoplay){
   cur=i;
   const t=tracks[i];
   audio.src=t.url;
   document.getElementById('now-title').textContent=t.title;
   document.querySelectorAll('.track-item').forEach((el,j)=>el.classList.toggle('active',j===i));
+  updateMediaSession(t);
   if(autoplay!==false){
     audio.play().then(()=>document.getElementById('vinyl').classList.add('spinning')).catch(()=>{});
     setPlayIcon(false);
@@ -716,30 +677,56 @@ function setPlayIcon(showPlay){
 }
 
 function prevTrack(){if(cur>0)loadTrack(cur-1,true);}
-
 function nextTrack(){
-  if(shuffling){
-    loadTrack(Math.floor(Math.random()*tracks.length),true);
-  }else if(cur<tracks.length-1){
-    loadTrack(cur+1,true);
-  }
+  if(shuffling){loadTrack(Math.floor(Math.random()*tracks.length),true);}
+  else if(cur<tracks.length-1){loadTrack(cur+1,true);}
+}
+function toggleLoop(){looping=!looping;audio.loop=looping;document.getElementById('loop-btn').classList.toggle('active',looping);}
+function toggleShuffle(){shuffling=!shuffling;document.getElementById('shuffle-btn').classList.toggle('active',shuffling);}
+
+// ── Sleep timer ──────────────────────────────────────────────
+function setSleep(mins){
+  if(sleepTimer){clearInterval(sleepTimer);sleepTimer=null;}
+  audio.volume=1;
+  document.querySelectorAll('.sleep-opt').forEach(b=>b.classList.remove('active'));
+  document.getElementById('s'+mins).classList.add('active');
+  const lbl=document.getElementById('sleep-label');
+  if(mins===0){lbl.textContent='Sleep timer';lbl.classList.remove('active');return;}
+  sleepRemaining=mins*60;
+  lbl.classList.add('active');
+  sleepTimer=setInterval(()=>{
+    sleepRemaining--;
+    const m=Math.floor(sleepRemaining/60),s=sleepRemaining%60;
+    lbl.textContent=m+':'+(s<10?'0':'')+s;
+    if(sleepRemaining<=30){audio.volume=Math.max(0,sleepRemaining/30);}
+    if(sleepRemaining<=0){
+      clearInterval(sleepTimer);sleepTimer=null;
+      audio.pause();audio.volume=1;
+      document.getElementById('vinyl').classList.remove('spinning');
+      setPlayIcon(true);
+      lbl.textContent='Sleep timer';lbl.classList.remove('active');
+      document.querySelectorAll('.sleep-opt').forEach(b=>b.classList.remove('active'));
+      document.getElementById('s0').classList.add('active');
+    }
+  },1000);
 }
 
-function toggleLoop(){
-  looping=!looping;
-  audio.loop=looping;
-  document.getElementById('loop-btn').classList.toggle('active',looping);
+// ── Media Session API (lock screen controls) ─────────────────
+function updateMediaSession(track){
+  if(!('mediaSession' in navigator))return;
+  navigator.mediaSession.metadata=new MediaMetadata({
+    title:track.title,
+    artist:'Brenda Johnston',
+    album:'Hypnosis & Meditation Studio',
+    artwork:[{src:'/icon.png',sizes:'512x512',type:'image/png'}]
+  });
+  navigator.mediaSession.setActionHandler('play',()=>{audio.play();document.getElementById('vinyl').classList.add('spinning');setPlayIcon(false);});
+  navigator.mediaSession.setActionHandler('pause',()=>{audio.pause();document.getElementById('vinyl').classList.remove('spinning');setPlayIcon(true);});
+  navigator.mediaSession.setActionHandler('previoustrack',prevTrack);
+  navigator.mediaSession.setActionHandler('nexttrack',nextTrack);
+  navigator.mediaSession.setActionHandler('seekbackward',(d)=>{audio.currentTime=Math.max(0,audio.currentTime-(d.seekOffset||10));});
+  navigator.mediaSession.setActionHandler('seekforward',(d)=>{audio.currentTime=Math.min(audio.duration,audio.currentTime+(d.seekOffset||10));});
 }
-
-function toggleShuffle(){
-  shuffling=!shuffling;
-  document.getElementById('shuffle-btn').classList.toggle('active',shuffling);
-}
-
-audio.addEventListener('ended',()=>{
-  document.getElementById('vinyl').classList.remove('spinning');
-  setPlayIcon(true);
-});
 
 audio.addEventListener('timeupdate',()=>{
   if(!audio.duration)return;
@@ -747,6 +734,14 @@ audio.addEventListener('timeupdate',()=>{
   document.getElementById('progress-fill').style.width=pct+'%';
   document.getElementById('time-cur').textContent=fmt(audio.currentTime);
   document.getElementById('time-dur').textContent=fmt(audio.duration);
+  if('mediaSession' in navigator && audio.duration){
+    try{navigator.mediaSession.setPositionState({duration:audio.duration,playbackRate:audio.playbackRate,position:audio.currentTime});}catch(e){}
+  }
+});
+
+audio.addEventListener('ended',()=>{
+  document.getElementById('vinyl').classList.remove('spinning');
+  setPlayIcon(true);
 });
 
 function seek(e){
@@ -756,11 +751,41 @@ function seek(e){
   audio.currentTime=((e.clientX-rect.left)/rect.width)*audio.duration;
 }
 
-function fmt(s){
-  if(isNaN(s))return'0:00';
-  const m=Math.floor(s/60),ss=Math.floor(s%60);
-  return m+':'+(ss<10?'0':'')+ss;
+// ── Add to Home Screen prompt ────────────────────────────────
+window.addEventListener('load',()=>{
+  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone=window.matchMedia('(display-mode: standalone)').matches||!!window.navigator.standalone;
+  const dismissed=localStorage.getItem('bjInstallDismissed');
+  if(!isStandalone&&!dismissed&&isIOS){
+    setTimeout(()=>{document.getElementById('ios-banner').style.display='flex';},2000);
+  }
+});
+
+window.addEventListener('beforeinstallprompt',(e)=>{
+  e.preventDefault();
+  deferredPrompt=e;
+  const isStandalone=window.matchMedia('(display-mode: standalone)').matches;
+  const dismissed=localStorage.getItem('bjInstallDismissed');
+  if(!isStandalone&&!dismissed){
+    setTimeout(()=>{document.getElementById('android-banner').style.display='flex';},2000);
+  }
+});
+
+function installApp(){
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(()=>{deferredPrompt=null;dismissBanner();});
+  }
 }
+
+function dismissBanner(){
+  document.getElementById('ios-banner').style.display='none';
+  document.getElementById('android-banner').style.display='none';
+  localStorage.setItem('bjInstallDismissed','1');
+}
+
+// ── Helpers ──────────────────────────────────────────────────
+function fmt(s){if(isNaN(s))return'0:00';const m=Math.floor(s/60),ss=Math.floor(s%60);return m+':'+(ss<10?'0':'')+ss;}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');}
 </script>
 </body>
@@ -885,6 +910,33 @@ class HypnosisHandler(http.server.BaseHTTPRequestHandler):
 
         if path.startswith("/api/"):
             self.handle_api_get(path)
+            return
+
+        if path == '/manifest.json':
+            manifest = json.dumps({
+                "name": "Brenda Johnston Hypnosis",
+                "short_name": "BJ Hypnosis",
+                "description": "Your personalized hypnosis and meditation program",
+                "start_url": "/",
+                "display": "standalone",
+                "background_color": "#000000",
+                "theme_color": "#ee0074",
+                "icons": [{"src": "/icon.png", "sizes": "any", "type": "image/png"}]
+            }).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/manifest+json")
+            self.send_header("Content-Length", len(manifest))
+            self.end_headers()
+            self.wfile.write(manifest)
+            return
+
+        if path == '/icon.png':
+            img = base64.b64decode(LOGO_PNG_B64)
+            self.send_response(200)
+            self.send_header("Content-Type", "image/png")
+            self.send_header("Content-Length", len(img))
+            self.end_headers()
+            self.wfile.write(img)
             return
 
         self.send_response(404); self.end_headers()
