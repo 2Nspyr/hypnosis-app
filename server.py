@@ -523,8 +523,8 @@ header img{height:46px;filter:drop-shadow(0 0 10px rgba(238,0,116,0.35))}
     <button class="sleep-opt" id="s60" onclick="setSleep(60)">60m</button>
   </div>
 </div>
-<div class=”track-list” id=”track-list”></div>
-<audio id=”audio”></audio>
+<div class="track-list" id="track-list"></div>
+<audio id="audio"></audio>
 <script>
 const token=location.pathname.split('/').pop();
 const audio=document.getElementById('audio');
