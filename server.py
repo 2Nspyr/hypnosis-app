@@ -396,7 +396,6 @@ body{
   display:flex;
   flex-direction:column;
   align-items:center;
-  padding-bottom:80px;
 }
 header{width:100%;padding:28px 20px 10px;display:flex;flex-direction:column;align-items:center;gap:8px}
 header img{height:46px;filter:drop-shadow(0 0 10px rgba(238,0,116,0.35))}
@@ -461,23 +460,6 @@ header img{height:46px;filter:drop-shadow(0 0 10px rgba(238,0,116,0.35))}
 .track-play-btn svg{width:16px;height:16px;color:rgba(255,240,247,0.75)}
 .track-name{font-size:15px;font-weight:700;flex:1;letter-spacing:0.01em}
 .track-dur{font-size:13px;color:var(--muted);min-width:38px;text-align:right}
-/* Install banner */
-.install-banner{
-  position:fixed;bottom:0;left:0;right:0;
-  background:rgba(18,0,26,0.97);
-  border-top:1px solid rgba(238,0,116,0.3);
-  padding:14px 18px;
-  display:none;align-items:center;gap:12px;
-  z-index:100;
-  backdrop-filter:blur(12px);
-}
-.install-banner .install-icon{font-size:22px;flex-shrink:0}
-.install-banner .install-text{flex:1}
-.install-banner .install-text strong{display:block;font-size:14px;margin-bottom:2px}
-.install-banner .install-text span{font-size:12px;color:var(--muted)}
-.install-banner .install-text .share-icon{display:inline-block;width:14px;height:14px;vertical-align:middle;margin:0 2px}
-.install-btn{background:var(--pink);border:none;border-radius:20px;color:#fff;font-size:12px;font-weight:600;padding:6px 14px;cursor:pointer;white-space:nowrap}
-.dismiss-btn{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px;line-height:1;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -541,33 +523,13 @@ header img{height:46px;filter:drop-shadow(0 0 10px rgba(238,0,116,0.35))}
     <button class="sleep-opt" id="s60" onclick="setSleep(60)">60m</button>
   </div>
 </div>
-<div class="track-list" id="track-list"></div>
-<!-- iOS install banner -->
-<div class="install-banner" id="ios-banner">
-  <span class="install-icon">&#127968;</span>
-  <div class="install-text">
-    <strong>Add to Home Screen</strong>
-    <span>Tap <svg class="share-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg> then “Add to Home Screen”</span>
-  </div>
-  <button class="dismiss-btn" onclick="dismissBanner()">&times;</button>
-</div>
-<!-- Android install banner -->
-<div class="install-banner" id="android-banner">
-  <span class="install-icon">&#127968;</span>
-  <div class="install-text">
-    <strong>Add to Home Screen</strong>
-    <span>Install for quick access anytime</span>
-  </div>
-  <button class="install-btn" onclick="installApp()">Install</button>
-  <button class="dismiss-btn" onclick="dismissBanner()">&times;</button>
-</div>
-<audio id="audio"></audio>
+<div class=”track-list” id=”track-list”></div>
+<audio id=”audio”></audio>
 <script>
 const token=location.pathname.split('/').pop();
 const audio=document.getElementById('audio');
 let tracks=[],cur=0,ready=false,looping=false,shuffling=false;
 let sleepTimer=null,sleepRemaining=0;
-let deferredPrompt=null;
 
 // ── Data load ────────────────────────────────────────────────
 fetch('/api/client/'+token).then(r=>r.json()).then(data=>{
@@ -712,39 +674,6 @@ function seek(e){
   const bar=document.getElementById('progress-bar');
   const rect=bar.getBoundingClientRect();
   audio.currentTime=((e.clientX-rect.left)/rect.width)*audio.duration;
-}
-
-// ── Add to Home Screen prompt ────────────────────────────────
-window.addEventListener('load',()=>{
-  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
-  const isStandalone=window.matchMedia('(display-mode: standalone)').matches||!!window.navigator.standalone;
-  const dismissed=localStorage.getItem('bjInstallDismissed');
-  if(!isStandalone&&!dismissed&&isIOS){
-    setTimeout(()=>{document.getElementById('ios-banner').style.display='flex';},2000);
-  }
-});
-
-window.addEventListener('beforeinstallprompt',(e)=>{
-  e.preventDefault();
-  deferredPrompt=e;
-  const isStandalone=window.matchMedia('(display-mode: standalone)').matches;
-  const dismissed=localStorage.getItem('bjInstallDismissed');
-  if(!isStandalone&&!dismissed){
-    setTimeout(()=>{document.getElementById('android-banner').style.display='flex';},2000);
-  }
-});
-
-function installApp(){
-  if(deferredPrompt){
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(()=>{deferredPrompt=null;dismissBanner();});
-  }
-}
-
-function dismissBanner(){
-  document.getElementById('ios-banner').style.display='none';
-  document.getElementById('android-banner').style.display='none';
-  localStorage.setItem('bjInstallDismissed','1');
 }
 
 // ── Helpers ──────────────────────────────────────────────────
