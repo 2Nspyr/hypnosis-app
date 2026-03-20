@@ -554,7 +554,7 @@ function nextTrack(){if(cur<tracks.length-1)loadTrack(cur+1);}
 
 audio.addEventListener('ended',()=>{
   document.getElementById('vinyl').classList.remove('spinning');
-  if(cur<tracks.length-1)loadTrack(cur+1);else setPlayIcon(true);
+  setPlayIcon(true);
 });
 
 audio.addEventListener('timeupdate',()=>{
