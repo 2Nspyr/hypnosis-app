@@ -96,7 +96,6 @@ ADMIN_HTML = """
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--bg:#080010;--sidebar:#110018;--card:#140020;--pink:#ee0074;--pink-light:#ff4da6;--text:#fff0f7;--muted:#c084a0;--border:rgba(238,0,116,0.2)}
 body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;display:flex;min-height:100vh}
-/* Sidebar */
 #sidebar{width:240px;background:var(--sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
 .sidebar-brand{padding:24px 20px;border-bottom:1px solid var(--border)}
 .sidebar-brand img{width:130px;filter:drop-shadow(0 0 8px rgba(238,0,116,0.3))}
@@ -108,16 +107,13 @@ nav a svg{width:18px;height:18px;flex-shrink:0}
 .sidebar-footer{padding:16px 20px;border-top:1px solid var(--border)}
 .logout-btn{display:block;width:100%;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:13px;padding:8px;cursor:pointer;transition:.15s;text-align:center}
 .logout-btn:hover{border-color:var(--pink);color:var(--pink)}
-/* Main */
 #main{flex:1;padding:32px;overflow-y:auto}
 .page{display:none}
 .page.active{display:block}
 .page-title{font-size:24px;font-weight:300;letter-spacing:0.06em;margin-bottom:8px}
 .page-sub{color:var(--muted);font-size:14px;margin-bottom:28px}
-/* Cards */
 .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:20px}
 .card h3{font-size:16px;font-weight:500;margin-bottom:16px;color:var(--text)}
-/* Forms */
 .form-row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
 input[type=text],input[type=file],select,textarea{background:#1c0028;border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px 14px;font-size:14px;outline:none;transition:.2s;font-family:inherit}
 input[type=text],select{min-width:220px}
@@ -127,29 +123,33 @@ input:focus,select:focus{border-color:var(--pink);box-shadow:0 0 0 2px rgba(238,
 .btn-sm{padding:6px 14px;font-size:13px}
 .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted);box-shadow:none}
 .btn-ghost:hover{border-color:var(--pink);color:var(--pink);background:rgba(238,0,116,0.05);transform:none;box-shadow:none}
-.btn-danger{background:linear-gradient(135deg,#c0002e,#7a0020)}
-/* Table */
+.btn-danger{background:linear-gradient(135deg,#c0002e,#7a0020);box-shadow:none}
 .tbl{width:100%;border-collapse:collapse;font-size:14px}
 .tbl th{text-align:left;color:var(--muted);font-size:12px;letter-spacing:0.08em;text-transform:uppercase;padding:8px 12px;border-bottom:1px solid var(--border)}
 .tbl td{padding:12px;border-bottom:1px solid rgba(238,0,116,0.08);vertical-align:middle}
 .tbl tr:last-child td{border-bottom:none}
-/* Upload progress */
 #upload-progress{margin-top:14px;display:none}
 progress{width:100%;height:8px;border-radius:4px;overflow:hidden;-webkit-appearance:none;appearance:none}
 progress::-webkit-progress-bar{background:#1c0028;border-radius:4px}
 progress::-webkit-progress-value{background:linear-gradient(90deg,#ee0074,#ff4da6);border-radius:4px}
-/* Link box */
-.link-box{background:#0e0018;border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--muted);word-break:break-all;margin-top:8px}
+.link-box{background:#0e0018;border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--muted);word-break:break-all}
 .link-box a{color:var(--pink-light);text-decoration:none}
 .link-box a:hover{text-decoration:underline}
-/* Toast */
 #toast{position:fixed;bottom:24px;right:24px;background:#1c0028;border:1px solid var(--pink);border-radius:10px;padding:12px 20px;font-size:14px;color:var(--text);display:none;z-index:999;box-shadow:0 4px 20px rgba(238,0,116,0.3)}
-/* Responsive */
 @media(max-width:640px){body{flex-direction:column}#sidebar{width:100%;flex-direction:row;overflow-x:auto}nav{display:flex;padding:0}nav a{padding:14px 16px}#main{padding:20px}}
-/* Drag-drop */
 .drop-zone{border:2px dashed rgba(238,0,116,0.35);border-radius:10px;padding:28px;text-align:center;color:var(--muted);transition:.2s;cursor:pointer}
 .drop-zone.over{background:rgba(238,0,116,0.08);border-color:var(--pink)}
 .drop-zone input{display:none}
+.prog-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:16px}
+.prog-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.prog-name{font-size:17px;font-weight:600;letter-spacing:0.02em}
+.prog-link-row{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.section-label{font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-weight:600}
+.track-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(238,0,116,0.08);font-size:14px}
+.track-row:last-child{border-bottom:none}
+.track-row .track-num{color:var(--muted);font-size:12px;margin-right:8px;min-width:20px}
+.add-track-row{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap}
+.add-track-row select{flex:1;min-width:180px}
 </style>
 </head>
 <body>
@@ -159,17 +159,13 @@ progress::-webkit-progress-value{background:linear-gradient(90deg,#ee0074,#ff4da
     <div class="name">Admin Studio</div>
   </div>
   <nav>
-    <a class="active" onclick="showPage('library')">
+    <a class="active" onclick="showPage('library',this)">
       <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
       Audio Library
     </a>
-    <a onclick="showPage('playlists')">
-      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h10"/></svg>
-      Playlists
-    </a>
-    <a onclick="showPage('clients')">
-      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-      Clients
+    <a onclick="showPage('programs',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+      Programs
     </a>
   </nav>
   <div class="sidebar-footer">
@@ -188,7 +184,7 @@ progress::-webkit-progress-value{background:linear-gradient(90deg,#ee0074,#ff4da
       <div class="form-row">
         <input type="text" id="track-title" placeholder="Track title (optional)">
       </div>
-      <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+      <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()" style="margin-top:14px">
         <input type="file" id="file-input" accept="audio/*">
         <p>Drop audio file here or click to browse</p>
         <p style="font-size:12px;margin-top:6px;opacity:0.6">MP3, M4A, WAV, OGG supported</p>
@@ -204,66 +200,43 @@ progress::-webkit-progress-value{background:linear-gradient(90deg,#ee0074,#ff4da
     </div>
   </div>
 
-  <!-- PLAYLISTS PAGE -->
-  <div id="page-playlists" class="page">
-    <div class="page-title">Playlists</div>
-    <p class="page-sub">Group tracks into programs for your clients</p>
+  <!-- PROGRAMS PAGE -->
+  <div id="page-programs" class="page">
+    <div class="page-title">Programs</div>
+    <p class="page-sub">Create a program, add tracks, and share the link with your client</p>
     <div class="card">
-      <h3>Create Playlist</h3>
+      <h3>Create New Program</h3>
       <div class="form-row">
-        <input type="text" id="pl-name" placeholder="Playlist name">
-        <button class="btn" onclick="createPlaylist()">Create</button>
+        <input type="text" id="prog-name" placeholder="e.g. Sarah – Week 1, Sleep Foundation…">
+        <button class="btn" onclick="createProgram()">Create Program</button>
       </div>
     </div>
-    <div class="card">
-      <h3>All Playlists</h3>
-      <div id="playlists-list"><p style="color:var(--muted);font-size:14px">Loading...</p></div>
-    </div>
-  </div>
-
-  <!-- CLIENTS PAGE -->
-  <div id="page-clients" class="page">
-    <div class="page-title">Clients</div>
-    <p class="page-sub">Create private listening links for each client</p>
-    <div class="card">
-      <h3>Add Client</h3>
-      <div class="form-row">
-        <input type="text" id="client-name" placeholder="Client name">
-        <select id="client-playlist"><option value="">— select playlist —</option></select>
-        <button class="btn" onclick="createClient()">Create Link</button>
-      </div>
-    </div>
-    <div class="card">
-      <h3>All Clients</h3>
-      <div id="clients-list"><p style="color:var(--muted);font-size:14px">Loading...</p></div>
-    </div>
+    <div id="programs-list"><p style="color:var(--muted);font-size:14px">Loading...</p></div>
   </div>
 
 </main>
 <div id="toast"></div>
 
 <script>
-const HOST = location.origin;
-let allTracks=[], allPlaylists=[], allClients=[];
+const HOST=location.origin;
+let allTracks=[],allPrograms=[];
 
-function showPage(p){
-  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
-  document.querySelectorAll('nav a').forEach(el=>el.classList.remove('active'));
+function showPage(p,el){
+  document.querySelectorAll('.page').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('nav a').forEach(e=>e.classList.remove('active'));
   document.getElementById('page-'+p).classList.add('active');
-  event.currentTarget.classList.add('active');
+  el.classList.add('active');
   if(p==='library')loadTracks();
-  if(p==='playlists')loadPlaylists();
-  if(p==='clients')loadClients();
+  if(p==='programs')loadPrograms();
 }
 
 function toast(msg){
   const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';
   setTimeout(()=>t.style.display='none',2800);
 }
-
 function logout(){fetch('/api/logout',{method:'POST'}).then(()=>location.reload());}
 
-// ── Tracks ──
+// ── Audio Library ──────────────────────────────────────────
 async function loadTracks(){
   const r=await fetch('/api/tracks');allTracks=await r.json();renderTracks();
 }
@@ -271,15 +244,18 @@ function renderTracks(){
   const el=document.getElementById('tracks-list');
   if(!allTracks.length){el.innerHTML='<p style="color:var(--muted);font-size:14px">No tracks yet. Upload your first recording above.</p>';return;}
   el.innerHTML='<table class="tbl"><thead><tr><th>Title</th><th>File</th><th></th></tr></thead><tbody>'+
-    allTracks.map(t=>`<tr><td>${esc(t.title)}</td><td style="color:var(--muted);font-size:12px">${esc(t.filename)}</td><td style="text-align:right"><button class="btn btn-sm btn-danger" onclick="deleteTrack('${t.id}')">Delete</button></td></tr>`).join('')+
-    '</tbody></table>';
+    allTracks.map(t=>`<tr>
+      <td>${esc(t.title)}</td>
+      <td style="color:var(--muted);font-size:12px">${esc(t.filename)}</td>
+      <td style="text-align:right"><button class="btn btn-sm btn-danger" onclick="deleteTrack('${t.id}')">Delete</button></td>
+    </tr>`).join('')+'</tbody></table>';
 }
 async function deleteTrack(id){
-  if(!confirm('Delete this track? It will be removed from all playlists.'))return;
+  if(!confirm('Delete this track? It will be removed from all programs.'))return;
   await fetch('/api/tracks/'+id,{method:'DELETE'});loadTracks();toast('Track deleted.');
 }
 
-// ── Upload ──
+// ── Upload ─────────────────────────────────────────────────
 const dropZone=document.getElementById('drop-zone');
 const fileInput=document.getElementById('file-input');
 dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.add('over');});
@@ -306,104 +282,91 @@ function doUpload(file){
   xhr.send(fd);
 }
 
-// ── Playlists ──
-async function loadPlaylists(){
-  const [pr,tr]=await Promise.all([fetch('/api/playlists'),fetch('/api/tracks')]);
-  allPlaylists=await pr.json();allTracks=await tr.json();
-  renderPlaylists();
-  const sel=document.getElementById('client-playlist');
-  if(sel){sel.innerHTML='<option value="">— select playlist —</option>'+allPlaylists.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');}
+// ── Programs ───────────────────────────────────────────────
+async function loadPrograms(){
+  const [pr,tr]=await Promise.all([fetch('/api/programs'),fetch('/api/tracks')]);
+  allPrograms=await pr.json();allTracks=await tr.json();
+  renderPrograms();
 }
-function renderPlaylists(){
-  const el=document.getElementById('playlists-list');
-  if(!allPlaylists.length){el.innerHTML='<p style="color:var(--muted);font-size:14px">No playlists yet.</p>';return;}
+
+function renderPrograms(){
+  const el=document.getElementById('programs-list');
+  if(!allPrograms.length){
+    el.innerHTML='<p style="color:var(--muted);font-size:14px">No programs yet. Create your first one above.</p>';
+    return;
+  }
   const tMap=Object.fromEntries(allTracks.map(t=>[t.id,t]));
-  el.innerHTML=allPlaylists.map(pl=>`
-    <div class="card" style="margin-bottom:12px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <strong>${esc(pl.name)}</strong>
-        <button class="btn btn-sm btn-danger" onclick="deletePlaylist('${pl.id}')">Delete</button>
-      </div>
-      <div style="margin-bottom:12px;font-size:13px;color:var(--muted)">${(pl.trackIds||[]).length} track(s)</div>
-      <div style="font-size:13px">
-        <strong style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Add tracks:</strong>
-        ${allTracks.filter(t=>!(pl.trackIds||[]).includes(t.id)).map(t=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)"><span>${esc(t.title)}</span><button class="btn btn-sm btn-ghost" onclick="addTrack('${pl.id}','${t.id}')">+ Add</button></div>`).join('')||'<span style="color:var(--muted)">All tracks added</span>'}
-      </div>
-      <div style="font-size:13px;margin-top:12px">
-        <strong style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Current tracks:</strong>
-        ${(pl.trackIds||[]).map((tid,i)=>tMap[tid]?`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)"><span>${i+1}. ${esc(tMap[tid].title)}</span><button class="btn btn-sm btn-ghost" onclick="removeTrack('${pl.id}','${tid}')">Remove</button></div>`:'').join('')||'<span style="color:var(--muted)">No tracks yet</span>'}
-      </div>
-    </div>`).join('');
+  el.innerHTML=allPrograms.map(pg=>{
+    const link=HOST+'/listen/'+pg.token;
+    const currentIds=pg.trackIds||[];
+    const available=allTracks.filter(t=>!currentIds.includes(t.id));
+    const currentTracks=currentIds.map((tid,i)=>tMap[tid]?`
+      <div class="track-row">
+        <span><span class="track-num">${i+1}.</span>${esc(tMap[tid].title)}</span>
+        <button class="btn btn-sm btn-ghost" onclick="removeTrack('${pg.id}','${tid}')">Remove</button>
+      </div>`:'').join('');
+    const addSelect=available.length
+      ? `<div class="add-track-row">
+           <select id="add-sel-${pg.id}">
+             <option value="">— choose a track to add —</option>
+             ${available.map(t=>`<option value="${t.id}">${esc(t.title)}</option>`).join('')}
+           </select>
+           <button class="btn btn-sm" onclick="addTrack('${pg.id}')">+ Add</button>
+         </div>`
+      : '<p style="font-size:13px;color:var(--muted);margin-top:10px">All tracks added.</p>';
+    return `
+      <div class="prog-card">
+        <div class="prog-header">
+          <span class="prog-name">${esc(pg.name)}</span>
+          <button class="btn btn-sm btn-danger" onclick="deleteProgram('${pg.id}')">Delete</button>
+        </div>
+        <div class="prog-link-row">
+          <div class="link-box" style="flex:1"><a href="${link}" target="_blank">${link}</a></div>
+          <button class="btn btn-sm btn-ghost" onclick="copyLink('${link}')">Copy Link</button>
+        </div>
+        <div class="section-label">${currentIds.length} track${currentIds.length!==1?'s':''}</div>
+        ${currentTracks||'<p style="font-size:13px;color:var(--muted);padding:6px 0">No tracks yet.</p>'}
+        ${addSelect}
+      </div>`;
+  }).join('');
 }
-async function createPlaylist(){
-  const name=document.getElementById('pl-name').value.trim();
-  if(!name){toast('Enter a playlist name.');return;}
-  await fetch('/api/playlists',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});
-  document.getElementById('pl-name').value='';loadPlaylists();toast('Playlist created!');
+
+async function createProgram(){
+  const name=document.getElementById('prog-name').value.trim();
+  if(!name){toast('Enter a program name.');return;}
+  await fetch('/api/programs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});
+  document.getElementById('prog-name').value='';
+  loadPrograms();toast('Program created!');
 }
-async function deletePlaylist(id){
-  if(!confirm('Delete this playlist?'))return;
-  await fetch('/api/playlists/'+id,{method:'DELETE'});loadPlaylists();toast('Playlist deleted.');
+
+async function deleteProgram(id){
+  if(!confirm('Delete this program? The listening link will stop working.'))return;
+  await fetch('/api/programs/'+id,{method:'DELETE'});
+  loadPrograms();toast('Program deleted.');
 }
-async function addTrack(pid,tid){
-  const pl=allPlaylists.find(p=>p.id===pid);
-  const ids=[...(pl.trackIds||[]),tid];
-  await fetch('/api/playlists/'+pid,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({trackIds:ids})});
-  loadPlaylists();toast('Track added.');
+
+async function addTrack(pid){
+  const sel=document.getElementById('add-sel-'+pid);
+  const tid=sel.value;
+  if(!tid){toast('Select a track first.');return;}
+  const pg=allPrograms.find(p=>p.id===pid);
+  const ids=[...(pg.trackIds||[]),tid];
+  await fetch('/api/programs/'+pid,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({trackIds:ids})});
+  loadPrograms();toast('Track added.');
 }
+
 async function removeTrack(pid,tid){
-  const pl=allPlaylists.find(p=>p.id===pid);
-  const ids=(pl.trackIds||[]).filter(i=>i!==tid);
-  await fetch('/api/playlists/'+pid,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({trackIds:ids})});
-  loadPlaylists();toast('Track removed.');
+  const pg=allPrograms.find(p=>p.id===pid);
+  const ids=(pg.trackIds||[]).filter(i=>i!==tid);
+  await fetch('/api/programs/'+pid,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({trackIds:ids})});
+  loadPrograms();toast('Track removed.');
 }
 
-// ── Clients ──
-async function loadClients(){
-  const [cr,pr]=await Promise.all([fetch('/api/clients'),fetch('/api/playlists')]);
-  allClients=await cr.json();allPlaylists=await pr.json();
-  const sel=document.getElementById('client-playlist');
-  sel.innerHTML='<option value="">— select playlist —</option>'+allPlaylists.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');
-  renderClients();
-}
-function renderClients(){
-  const el=document.getElementById('clients-list');
-  const pMap=Object.fromEntries(allPlaylists.map(p=>[p.id,p]));
-  if(!allClients.length){el.innerHTML='<p style="color:var(--muted);font-size:14px">No clients yet.</p>';return;}
-  el.innerHTML='<table class="tbl"><thead><tr><th>Client</th><th>Playlist</th><th>Listening Link</th><th></th></tr></thead><tbody>'+
-    allClients.map(c=>{
-      const link=HOST+'/listen/'+c.token;
-      const pl=pMap[c.playlistId];
-      return `<tr>
-        <td><strong>${esc(c.name)}</strong></td>
-        <td style="color:var(--muted)">${pl?esc(pl.name):'—'}</td>
-        <td><div class="link-box"><a href="${link}" target="_blank">${link}</a></div>
-          <button class="btn btn-sm btn-ghost" style="margin-top:6px" onclick="copyLink('${link}')">Copy Link</button></td>
-        <td><button class="btn btn-sm btn-danger" onclick="deleteClient('${c.id}')">Delete</button></td>
-      </tr>`;
-    }).join('')+'</tbody></table>';
-}
-async function createClient(){
-  const name=document.getElementById('client-name').value.trim();
-  const playlistId=document.getElementById('client-playlist').value;
-  if(!name||!playlistId){toast('Fill in client name and playlist.');return;}
-  await fetch('/api/clients',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,playlistId})});
-  document.getElementById('client-name').value='';loadClients();toast('Client created!');
-}
-async function deleteClient(id){
-  if(!confirm('Delete this client?'))return;
-  await fetch('/api/clients/'+id,{method:'DELETE'});loadClients();toast('Client deleted.');
-}
 function copyLink(url){navigator.clipboard.writeText(url).then(()=>toast('Link copied!'));}
-
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 // Init
 loadTracks();
-setInterval(()=>{
-  const sel=document.getElementById('client-playlist');
-  if(sel&&allPlaylists.length===0)loadPlaylists();
-},500);
 </script>
 </body>
 </html>
@@ -817,7 +780,7 @@ p{color:#c084a0;font-size:16px}
 # ─────────────────────────────────────────────────────────────
 def load_db():
     if not DATA_FILE.exists():
-        return {"tracks": [], "playlists": [], "clients": []}
+        return {"tracks": [], "programs": []}
     with open(DATA_FILE) as f:
         return json.load(f)
 
@@ -977,24 +940,18 @@ class HypnosisHandler(http.server.BaseHTTPRequestHandler):
         if path == "/api/tracks":
             if not self.require_auth(): return
             self.send_json(load_db()["tracks"])
-        elif path == "/api/playlists":
+        elif path == "/api/programs":
             if not self.require_auth(): return
-            self.send_json(load_db()["playlists"])
-        elif path == "/api/clients":
-            if not self.require_auth(): return
-            self.send_json(load_db()["clients"])
+            self.send_json(load_db().get("programs", []))
         elif path.startswith("/api/client/"):
             token = path[len("/api/client/"):]
             db = load_db()
-            client = next((c for c in db["clients"] if c["token"] == token), None)
-            if not client:
+            program = next((p for p in db.get("programs", []) if p["token"] == token), None)
+            if not program:
                 self.send_error_json("Not found", 404); return
-            playlist = next((p for p in db["playlists"] if p["id"] == client["playlistId"]), None)
-            if not playlist:
-                self.send_error_json("Playlist not found", 404); return
             track_map = {t["id"]: t for t in db["tracks"]}
-            tracks = [track_map[tid] for tid in playlist.get("trackIds", []) if tid in track_map]
-            self.send_json({"clientName": client["name"], "playlistName": playlist["name"], "tracks": tracks})
+            tracks = [track_map[tid] for tid in program.get("trackIds", []) if tid in track_map]
+            self.send_json({"clientName": program["name"], "playlistName": program["name"], "tracks": tracks})
         else:
             self.send_error_json("Not found", 404)
 
@@ -1007,12 +964,9 @@ class HypnosisHandler(http.server.BaseHTTPRequestHandler):
         elif path == "/api/upload":
             if not self.require_auth(): return
             self.handle_upload()
-        elif path == "/api/playlists":
+        elif path == "/api/programs":
             if not self.require_auth(): return
-            self.handle_create_playlist()
-        elif path == "/api/clients":
-            if not self.require_auth(): return
-            self.handle_create_client()
+            self.handle_create_program()
         else:
             self.send_error_json("Not found", 404)
 
@@ -1020,9 +974,9 @@ class HypnosisHandler(http.server.BaseHTTPRequestHandler):
 
     def do_PUT(self):
         path = urllib.parse.urlparse(self.path).path.rstrip("/")
-        if path.startswith("/api/playlists/"):
+        if path.startswith("/api/programs/"):
             if not self.require_auth(): return
-            self.handle_update_playlist(path[len("/api/playlists/"):])
+            self.handle_update_program(path[len("/api/programs/"):])
         else:
             self.send_error_json("Not found", 404)
 
@@ -1033,12 +987,9 @@ class HypnosisHandler(http.server.BaseHTTPRequestHandler):
         if path.startswith("/api/tracks/"):
             if not self.require_auth(): return
             self.handle_delete_track(path[len("/api/tracks/"):])
-        elif path.startswith("/api/playlists/"):
+        elif path.startswith("/api/programs/"):
             if not self.require_auth(): return
-            self.handle_delete_playlist(path[len("/api/playlists/"):])
-        elif path.startswith("/api/clients/"):
-            if not self.require_auth(): return
-            self.handle_delete_client(path[len("/api/clients/"):])
+            self.handle_delete_program(path[len("/api/programs/"):])
         else:
             self.send_error_json("Not found", 404)
 
@@ -1138,53 +1089,34 @@ class HypnosisHandler(http.server.BaseHTTPRequestHandler):
         save_db(db)
         self.send_json(track, 201)
 
-    def handle_create_playlist(self):
+    def handle_create_program(self):
         body = self.read_json_body()
         name = body.get("name", "").strip()
         if not name:
             self.send_error_json("Name required"); return
         db = load_db()
-        pl = {"id": new_id(), "name": name, "trackIds": body.get("trackIds", [])}
-        db["playlists"].append(pl)
-        save_db(db)
-        self.send_json(pl, 201)
-
-    def handle_update_playlist(self, pid):
-        body = self.read_json_body()
-        db = load_db()
-        pl = next((p for p in db["playlists"] if p["id"] == pid), None)
-        if not pl:
-            self.send_error_json("Not found", 404); return
-        if "name" in body: pl["name"] = body["name"].strip()
-        if "trackIds" in body: pl["trackIds"] = body["trackIds"]
-        save_db(db)
-        self.send_json(pl)
-
-    def handle_delete_playlist(self, pid):
-        db = load_db()
-        db["playlists"] = [p for p in db["playlists"] if p["id"] != pid]
-        db["clients"] = [c for c in db["clients"] if c["playlistId"] != pid]
-        save_db(db)
-        self.send_json({"ok": True})
-
-    def handle_create_client(self):
-        body = self.read_json_body()
-        name = body.get("name", "").strip()
-        playlist_id = body.get("playlistId", "").strip()
-        if not name or not playlist_id:
-            self.send_error_json("name and playlistId required"); return
-        db = load_db()
-        if not any(p["id"] == playlist_id for p in db["playlists"]):
-            self.send_error_json("Playlist not found", 404); return
+        if "programs" not in db:
+            db["programs"] = []
         token = secrets.token_urlsafe(24)
-        client = {"id": new_id(), "name": name, "playlistId": playlist_id, "token": token}
-        db["clients"].append(client)
+        program = {"id": new_id(), "name": name, "token": token, "trackIds": body.get("trackIds", [])}
+        db["programs"].append(program)
         save_db(db)
-        self.send_json(client, 201)
+        self.send_json(program, 201)
 
-    def handle_delete_client(self, cid):
+    def handle_update_program(self, pid):
+        body = self.read_json_body()
         db = load_db()
-        db["clients"] = [c for c in db["clients"] if c["id"] != cid]
+        pg = next((p for p in db.get("programs", []) if p["id"] == pid), None)
+        if not pg:
+            self.send_error_json("Not found", 404); return
+        if "name" in body: pg["name"] = body["name"].strip()
+        if "trackIds" in body: pg["trackIds"] = body["trackIds"]
+        save_db(db)
+        self.send_json(pg)
+
+    def handle_delete_program(self, pid):
+        db = load_db()
+        db["programs"] = [p for p in db.get("programs", []) if p["id"] != pid]
         save_db(db)
         self.send_json({"ok": True})
 
@@ -1195,7 +1127,7 @@ class HypnosisHandler(http.server.BaseHTTPRequestHandler):
             fp = UPLOADS_DIR / track["filename"]
             if fp.exists(): fp.unlink()
             db["tracks"] = [t for t in db["tracks"] if t["id"] != tid]
-            for p in db["playlists"]:
+            for p in db.get("programs", []):
                 p["trackIds"] = [i for i in p.get("trackIds", []) if i != tid]
         save_db(db)
         self.send_json({"ok": True})
