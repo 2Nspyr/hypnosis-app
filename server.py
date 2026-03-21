@@ -22,8 +22,8 @@ from pathlib import Path
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "changeme123")
 PORT = int(os.environ.get("PORT", 8080))
 BASE_DIR = Path(__file__).parent
-DATA_FILE = BASE_DIR / "data" / "db.json"
-UPLOADS_DIR = BASE_DIR / "uploads"
+DATA_FILE = Path("/data/db.json")
+UPLOADS_DIR = Path("/data/uploads")
 SESSIONS: set = set()
 
 # ─────────────────────────────────────────────────────────────
