@@ -150,6 +150,9 @@ progress::-webkit-progress-value{background:linear-gradient(90deg,#ee0074,#ff4da
 .track-row .track-num{color:var(--muted);font-size:12px;margin-right:8px;min-width:20px}
 .add-track-row{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap}
 .add-track-row select{flex:1;min-width:180px}
+.avail-track-list{margin-top:10px}
+.avail-track-item{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(238,0,116,0.08);font-size:14px}
+.avail-track-item:last-child{border-bottom:none}
 </style>
 </head>
 <body>
@@ -247,7 +250,7 @@ function renderTracks(){
     allTracks.map(t=>`<tr>
       <td>${esc(t.title)}</td>
       <td style="color:var(--muted);font-size:12px">${esc(t.filename)}</td>
-      <td style="text-align:right"><button class="btn btn-sm btn-danger" onclick="deleteTrack('${t.id}')">Delete</button></td>
+      <td style="text-align:right;white-space:nowrap"><button class="btn btn-sm btn-ghost" onclick="copyLink(HOST+'/track/${t.id}')" style="margin-right:8px">Copy Link</button><button class="btn btn-sm btn-danger" onclick="deleteTrack('${t.id}')">Delete</button></td>
     </tr>`).join('')+'</tbody></table>';
 }
 async function deleteTrack(id){
@@ -306,12 +309,9 @@ function renderPrograms(){
         <button class="btn btn-sm btn-ghost" onclick="removeTrack('${pg.id}','${tid}')">Remove</button>
       </div>`:'').join('');
     const addSelect=available.length
-      ? `<div class="add-track-row">
-           <select id="add-sel-${pg.id}">
-             <option value="">— choose a track to add —</option>
-             ${available.map(t=>`<option value="${t.id}">${esc(t.title)}</option>`).join('')}
-           </select>
-           <button class="btn btn-sm" onclick="addTrack('${pg.id}')">+ Add</button>
+      ? `<div class="section-label" style="margin-top:14px">Add Tracks</div>
+         <div class="avail-track-list">
+           ${available.map(t=>`<div class="avail-track-item"><span>${esc(t.title)}</span><button class="btn btn-sm" onclick="addTrackDirect('${pg.id}','${t.id}')">+ Add</button></div>`).join('')}
          </div>`
       : '<p style="font-size:13px;color:var(--muted);margin-top:10px">All tracks added.</p>';
     return `
@@ -360,6 +360,13 @@ async function removeTrack(pid,tid){
   const ids=(pg.trackIds||[]).filter(i=>i!==tid);
   await fetch('/api/programs/'+pid,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({trackIds:ids})});
   loadPrograms();toast('Track removed.');
+}
+
+async function addTrackDirect(pid,tid){
+  const pg=allPrograms.find(p=>p.id===pid);
+  const ids=[...(pg.trackIds||[]),tid];
+  await fetch('/api/programs/'+pid,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({trackIds:ids})});
+  loadPrograms();toast('Track added.');
 }
 
 function copyLink(url){navigator.clipboard.writeText(url).then(()=>toast('Link copied!'));}
@@ -460,6 +467,7 @@ header img{height:46px;filter:drop-shadow(0 0 10px rgba(238,0,116,0.35))}
 .track-play-btn svg{width:16px;height:16px;color:rgba(255,240,247,0.75)}
 .track-name{font-size:15px;font-weight:700;flex:1;letter-spacing:0.01em}
 .track-dur{font-size:13px;color:var(--muted);min-width:38px;text-align:right}
+.track-counter{font-size:12px;color:var(--muted);letter-spacing:0.06em;margin-top:4px;min-height:16px;text-align:center}
 </style>
 </head>
 <body>
@@ -471,6 +479,7 @@ header img{height:46px;filter:drop-shadow(0 0 10px rgba(238,0,116,0.35))}
 <div class="vinyl" id="vinyl"></div>
 <div class="track-title-wrap">
   <h3 id="now-title">Select a track</h3>
+  <div class="track-counter" id="track-counter"></div>
 </div>
 <div class="progress-wrap">
   <div class="progress-row">
@@ -526,13 +535,15 @@ header img{height:46px;filter:drop-shadow(0 0 10px rgba(238,0,116,0.35))}
 <div class="track-list" id="track-list"></div>
 <audio id="audio"></audio>
 <script>
-const token=location.pathname.split('/').pop();
+const _parts=location.pathname.split('/');
+const isSingle=_parts[1]==='track';
+const token=_parts.pop();
 const audio=document.getElementById('audio');
 let tracks=[],cur=0,ready=false,looping=false,shuffling=false;
 let sleepTimer=null,sleepRemaining=0;
 
 // ── Data load ────────────────────────────────────────────────
-fetch('/api/client/'+token).then(r=>r.json()).then(data=>{
+fetch((isSingle?'/api/track/':'/api/client/')+token).then(r=>r.json()).then(data=>{
   if(data.error){document.getElementById('client-name').textContent='Program not found';return;}
   document.getElementById('client-name').textContent=data.clientName;
   document.title=data.clientName+' — Hypnosis Program';
@@ -574,6 +585,8 @@ function loadTrack(i,autoplay){
   const t=tracks[i];
   audio.src=t.url;
   document.getElementById('now-title').textContent=t.title;
+  const ctr=document.getElementById('track-counter');
+  if(ctr)ctr.textContent=tracks.length>1?'Track '+(i+1)+' of '+tracks.length:'';
   document.querySelectorAll('.track-item').forEach((el,j)=>el.classList.toggle('active',j===i));
   updateMediaSession(t);
   if(autoplay!==false){
@@ -791,6 +804,16 @@ class HypnosisHandler(http.server.BaseHTTPRequestHandler):
             self.send_html(PLAYER_HTML)
             return
 
+        if path.startswith("/track/"):
+            track_id = path[len("/track/"):]
+            db = load_db()
+            track = next((t for t in db["tracks"] if t["id"] == track_id), None)
+            if not track:
+                self.send_html(NOT_FOUND_HTML, 404)
+                return
+            self.send_html(PLAYER_HTML)
+            return
+
         if path.startswith("/uploads/"):
             filename = urllib.parse.unquote(path[len("/uploads/"):])
             file_path = UPLOADS_DIR / filename
@@ -881,6 +904,13 @@ class HypnosisHandler(http.server.BaseHTTPRequestHandler):
             track_map = {t["id"]: t for t in db["tracks"]}
             tracks = [track_map[tid] for tid in program.get("trackIds", []) if tid in track_map]
             self.send_json({"clientName": program["name"], "playlistName": program["name"], "tracks": tracks})
+        elif path.startswith("/api/track/"):
+            track_id = path[len("/api/track/"):]
+            db = load_db()
+            track = next((t for t in db["tracks"] if t["id"] == track_id), None)
+            if not track:
+                self.send_error_json("Not found", 404); return
+            self.send_json({"clientName": track["title"], "playlistName": track["title"], "tracks": [track]})
         else:
             self.send_error_json("Not found", 404)
 
