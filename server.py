@@ -148,11 +148,14 @@ progress::-webkit-progress-value{background:linear-gradient(90deg,#ee0074,#ff4da
 .track-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(238,0,116,0.08);font-size:14px}
 .track-row:last-child{border-bottom:none}
 .track-row .track-num{color:var(--muted);font-size:12px;margin-right:8px;min-width:20px}
-.add-track-row{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap}
-.add-track-row select{flex:1;min-width:180px}
-.avail-track-list{margin-top:10px}
-.avail-track-item{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(238,0,116,0.08);font-size:14px}
-.avail-track-item:last-child{border-bottom:none}
+.track-lib-row{padding:14px 0;border-bottom:1px solid rgba(238,0,116,0.08)}
+.track-lib-row:last-child{border-bottom:none}
+.track-lib-title{font-size:15px;font-weight:600;margin-bottom:3px}
+.track-lib-file{font-size:12px;color:var(--muted);margin-bottom:8px}
+.track-lib-actions{display:flex;gap:8px;flex-wrap:wrap}
+.prog-picker{background:#0e0018;border:1px solid var(--border);border-radius:8px;padding:8px;margin-top:10px;display:none}
+.prog-pick-btn{display:block;width:100%;text-align:left;background:transparent;border:none;color:var(--text);font-size:14px;padding:8px 12px;cursor:pointer;border-radius:6px;transition:.15s;font-family:inherit}
+.prog-pick-btn:hover{background:rgba(238,0,116,0.12);color:var(--pink)}
 </style>
 </head>
 <body>
@@ -241,17 +244,46 @@ function logout(){fetch('/api/logout',{method:'POST'}).then(()=>location.reload(
 
 // ── Audio Library ──────────────────────────────────────────
 async function loadTracks(){
-  const r=await fetch('/api/tracks');allTracks=await r.json();renderTracks();
+  const [tr,pr]=await Promise.all([fetch('/api/tracks'),fetch('/api/programs')]);
+  allTracks=await tr.json();allPrograms=await pr.json();renderTracks();
 }
 function renderTracks(){
   const el=document.getElementById('tracks-list');
   if(!allTracks.length){el.innerHTML='<p style="color:var(--muted);font-size:14px">No tracks yet. Upload your first recording above.</p>';return;}
-  el.innerHTML='<table class="tbl"><thead><tr><th>Title</th><th>File</th><th></th></tr></thead><tbody>'+
-    allTracks.map(t=>`<tr>
-      <td>${esc(t.title)}</td>
-      <td style="color:var(--muted);font-size:12px">${esc(t.filename)}</td>
-      <td style="text-align:right;white-space:nowrap"><button class="btn btn-sm btn-ghost" onclick="copyLink(HOST+'/track/${t.id}')" style="margin-right:8px">Copy Link</button><button class="btn btn-sm btn-danger" onclick="deleteTrack('${t.id}')">Delete</button></td>
-    </tr>`).join('')+'</tbody></table>';
+  el.innerHTML=allTracks.map(t=>`
+    <div class="track-lib-row">
+      <div class="track-lib-title">${esc(t.title)}</div>
+      <div class="track-lib-file">${esc(t.filename)}</div>
+      <div class="track-lib-actions">
+        <button class="btn btn-sm" onclick="toggleProgramPicker('${t.id}')">Add to Program ▾</button>
+        <button class="btn btn-sm btn-ghost" onclick="copyLink(HOST+'/track/${t.id}')">Copy Link</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteTrack('${t.id}')">Delete</button>
+      </div>
+      <div class="prog-picker" id="pp-${t.id}"></div>
+    </div>`).join('');
+}
+
+function toggleProgramPicker(tid){
+  const picker=document.getElementById('pp-'+tid);
+  const isOpen=picker.style.display==='block';
+  document.querySelectorAll('.prog-picker').forEach(p=>p.style.display='none');
+  if(isOpen)return;
+  const eligible=allPrograms.filter(pg=>!(pg.trackIds||[]).includes(tid));
+  if(!eligible.length){
+    picker.innerHTML='<p style="font-size:13px;color:var(--muted);padding:4px 6px">Already added to all programs.</p>';
+  } else {
+    picker.innerHTML=eligible.map(pg=>`<button class="prog-pick-btn" onclick="addToProgram('${tid}','${pg.id}')">${esc(pg.name)}</button>`).join('');
+  }
+  picker.style.display='block';
+}
+
+async function addToProgram(tid,pid){
+  const pg=allPrograms.find(p=>p.id===pid);
+  const ids=[...(pg.trackIds||[]),tid];
+  await fetch('/api/programs/'+pid,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({trackIds:ids})});
+  document.querySelectorAll('.prog-picker').forEach(p=>p.style.display='none');
+  await loadTracks();
+  toast('Added to "'+esc(pg.name)+'"!');
 }
 async function deleteTrack(id){
   if(!confirm('Delete this track? It will be removed from all programs.'))return;
@@ -302,18 +334,11 @@ function renderPrograms(){
   el.innerHTML=allPrograms.map(pg=>{
     const link=HOST+'/listen/'+pg.token;
     const currentIds=pg.trackIds||[];
-    const available=allTracks.filter(t=>!currentIds.includes(t.id));
     const currentTracks=currentIds.map((tid,i)=>tMap[tid]?`
       <div class="track-row">
         <span><span class="track-num">${i+1}.</span>${esc(tMap[tid].title)}</span>
         <button class="btn btn-sm btn-ghost" onclick="removeTrack('${pg.id}','${tid}')">Remove</button>
       </div>`:'').join('');
-    const addSelect=available.length
-      ? `<div class="section-label" style="margin-top:14px">Add Tracks</div>
-         <div class="avail-track-list">
-           ${available.map(t=>`<div class="avail-track-item"><span>${esc(t.title)}</span><button class="btn btn-sm" onclick="addTrackDirect('${pg.id}','${t.id}')">+ Add</button></div>`).join('')}
-         </div>`
-      : '<p style="font-size:13px;color:var(--muted);margin-top:10px">All tracks added.</p>';
     return `
       <div class="prog-card">
         <div class="prog-header">
@@ -325,8 +350,7 @@ function renderPrograms(){
           <button class="btn btn-sm btn-ghost" onclick="copyLink('${link}')">Copy Link</button>
         </div>
         <div class="section-label">${currentIds.length} track${currentIds.length!==1?'s':''}</div>
-        ${currentTracks||'<p style="font-size:13px;color:var(--muted);padding:6px 0">No tracks yet.</p>'}
-        ${addSelect}
+        ${currentTracks||'<p style="font-size:13px;color:var(--muted);padding:6px 0">No tracks yet. Add tracks from the Audio Library.</p>'}
       </div>`;
   }).join('');
 }
@@ -345,16 +369,6 @@ async function deleteProgram(id){
   loadPrograms();toast('Program deleted.');
 }
 
-async function addTrack(pid){
-  const sel=document.getElementById('add-sel-'+pid);
-  const tid=sel.value;
-  if(!tid){toast('Select a track first.');return;}
-  const pg=allPrograms.find(p=>p.id===pid);
-  const ids=[...(pg.trackIds||[]),tid];
-  await fetch('/api/programs/'+pid,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({trackIds:ids})});
-  loadPrograms();toast('Track added.');
-}
-
 async function removeTrack(pid,tid){
   const pg=allPrograms.find(p=>p.id===pid);
   const ids=(pg.trackIds||[]).filter(i=>i!==tid);
@@ -362,12 +376,6 @@ async function removeTrack(pid,tid){
   loadPrograms();toast('Track removed.');
 }
 
-async function addTrackDirect(pid,tid){
-  const pg=allPrograms.find(p=>p.id===pid);
-  const ids=[...(pg.trackIds||[]),tid];
-  await fetch('/api/programs/'+pid,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({trackIds:ids})});
-  loadPrograms();toast('Track added.');
-}
 
 function copyLink(url){navigator.clipboard.writeText(url).then(()=>toast('Link copied!'));}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
