@@ -142,7 +142,10 @@ progress::-webkit-progress-value{background:linear-gradient(90deg,#ee0074,#ff4da
 .drop-zone input{display:none}
 .prog-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:16px}
 .prog-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
-.prog-name{font-size:17px;font-weight:600;letter-spacing:0.02em}
+.prog-name{font-size:17px;font-weight:600;letter-spacing:0.02em;cursor:pointer;display:flex;align-items:center;gap:8px;user-select:none}
+.prog-name:hover{color:var(--pink-light)}
+.prog-chevron{font-size:13px;color:var(--muted);transition:transform .2s}
+.prog-body{display:none}
 .prog-link-row{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
 .section-label{font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-weight:600}
 .track-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(238,0,116,0.08);font-size:14px}
@@ -342,17 +345,31 @@ function renderPrograms(){
     return `
       <div class="prog-card">
         <div class="prog-header">
-          <span class="prog-name">${esc(pg.name)}</span>
+          <span class="prog-name" onclick="toggleProgram('${pg.id}')">
+            <span class="prog-chevron" id="chev-${pg.id}">▶</span>
+            ${esc(pg.name)}
+            <span style="font-size:12px;color:var(--muted);font-weight:400">(${currentIds.length} track${currentIds.length!==1?'s':''})</span>
+          </span>
           <button class="btn btn-sm btn-danger" onclick="deleteProgram('${pg.id}')">Delete</button>
         </div>
-        <div class="prog-link-row">
-          <div class="link-box" style="flex:1"><a href="${link}" target="_blank">${link}</a></div>
-          <button class="btn btn-sm btn-ghost" onclick="copyLink('${link}')">Copy Link</button>
+        <div class="prog-body" id="body-${pg.id}">
+          <div class="prog-link-row">
+            <div class="link-box" style="flex:1"><a href="${link}" target="_blank">${link}</a></div>
+            <button class="btn btn-sm btn-ghost" onclick="copyLink('${link}')">Copy Link</button>
+          </div>
+          <div class="section-label">${currentIds.length} track${currentIds.length!==1?'s':''}</div>
+          ${currentTracks||'<p style="font-size:13px;color:var(--muted);padding:6px 0">No tracks yet. Add tracks from the Audio Library.</p>'}
         </div>
-        <div class="section-label">${currentIds.length} track${currentIds.length!==1?'s':''}</div>
-        ${currentTracks||'<p style="font-size:13px;color:var(--muted);padding:6px 0">No tracks yet. Add tracks from the Audio Library.</p>'}
       </div>`;
   }).join('');
+}
+
+function toggleProgram(id){
+  const body=document.getElementById('body-'+id);
+  const chev=document.getElementById('chev-'+id);
+  const open=body.style.display==='block';
+  body.style.display=open?'none':'block';
+  chev.style.transform=open?'':'rotate(90deg)';
 }
 
 async function createProgram(){
