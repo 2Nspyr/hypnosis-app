@@ -605,6 +605,10 @@ header img{height:46px;filter:drop-shadow(0 0 10px rgba(238,0,116,0.35))}
 .track-play-btn svg{width:16px;height:16px;color:rgba(255,240,247,0.75)}
 .track-name{font-size:15px;font-weight:700;flex:1;letter-spacing:0.01em}
 .track-dur{font-size:13px;color:var(--muted);min-width:38px;text-align:right}
+.track-drag{cursor:grab;color:rgba(255,255,255,0.2);font-size:15px;padding-right:4px;flex-shrink:0}
+.track-drag:hover{color:rgba(255,255,255,0.5)}
+.track-item.drag-over{border-top:2px solid var(--pink)}
+.track-item.dragging{opacity:0.35}
 .track-counter{font-size:12px;color:var(--muted);letter-spacing:0.06em;margin-top:4px;min-height:16px;text-align:center}
 </style>
 </head>
@@ -695,14 +699,37 @@ fetch((isSingle?'/api/track/':'/api/client/')+token).then(r=>r.json()).then(data
 function renderList(){
   const el=document.getElementById('track-list');
   el.innerHTML=tracks.map((t,i)=>`
-    <div class="track-item${i===cur?' active':''}" id="ti-${i}" onclick="loadTrack(${i},true)">
-      <div class="track-play-btn">
+    <div class="track-item${i===cur?' active':''}" id="ti-${i}" draggable="true" data-idx="${i}"
+         ondragstart="plDragStart(event)" ondragover="plDragOver(event)" ondrop="plDrop(event)" ondragleave="plDragLeave(event)">
+      <div class="track-drag" onclick="event.stopPropagation()">⠿</div>
+      <div class="track-play-btn" onclick="loadTrack(${i},true)">
         <svg fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
       </div>
-      <div class="track-name">${esc(t.title)}</div>
+      <div class="track-name" onclick="loadTrack(${i},true)">${esc(t.title)}</div>
       <div class="track-dur" id="dur-${i}">--:--</div>
     </div>`).join('');
   loadDurations();
+}
+
+let _plDragSrc=null;
+function plDragStart(e){_plDragSrc=e.currentTarget;e.dataTransfer.effectAllowed='move';setTimeout(()=>_plDragSrc&&_plDragSrc.classList.add('dragging'),0);}
+function plDragOver(e){e.preventDefault();document.querySelectorAll('.track-item').forEach(r=>r.classList.remove('drag-over'));if(e.currentTarget!==_plDragSrc)e.currentTarget.classList.add('drag-over');}
+function plDragLeave(e){e.currentTarget.classList.remove('drag-over');}
+async function plDrop(e){
+  e.preventDefault();
+  document.querySelectorAll('.track-item').forEach(r=>{r.classList.remove('drag-over');r.classList.remove('dragging');});
+  if(!_plDragSrc||_plDragSrc===e.currentTarget)return;
+  const fi=parseInt(_plDragSrc.dataset.idx),ti=parseInt(e.currentTarget.dataset.idx);
+  const curTrack=tracks[cur];
+  const moved=tracks.splice(fi,1)[0];
+  tracks.splice(ti,0,moved);
+  cur=tracks.indexOf(curTrack);
+  renderList();
+  const ctr=document.getElementById('track-counter');
+  if(ctr&&tracks.length>1)ctr.textContent='Track '+(cur+1)+' of '+tracks.length;
+  if(!isSingle){
+    await fetch('/api/client/'+token,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({trackIds:tracks.map(t=>t.id)})});
+  }
 }
 
 function loadDurations(){
@@ -1080,6 +1107,9 @@ class HypnosisHandler(http.server.BaseHTTPRequestHandler):
         if path.startswith("/api/programs/"):
             if not self.require_auth(): return
             self.handle_update_program(path[len("/api/programs/"):])
+        elif path.startswith("/api/client/"):
+            token = path[len("/api/client/"):]
+            self.handle_update_client_order(token)
         elif path.startswith("/api/categories/"):
             if not self.require_auth(): return
             self.handle_update_category(path[len("/api/categories/"):])
@@ -1106,6 +1136,16 @@ class HypnosisHandler(http.server.BaseHTTPRequestHandler):
             self.send_error_json("Not found", 404)
 
     # ── Handlers ────────────────────────────────────────────
+
+    def handle_update_client_order(self, token):
+        body = self.read_json_body()
+        db = load_db()
+        program = next((p for p in db.get("programs", []) if p["token"] == token), None)
+        if not program:
+            self.send_error_json("Not found", 404); return
+        program["trackIds"] = body.get("trackIds", program.get("trackIds", []))
+        save_db(db)
+        self.send_json({"ok": True})
 
     def handle_create_category(self):
         body = self.read_json_body()
