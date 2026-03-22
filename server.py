@@ -159,6 +159,16 @@ progress::-webkit-progress-value{background:linear-gradient(90deg,#ee0074,#ff4da
 .prog-picker{background:#0e0018;border:1px solid var(--border);border-radius:8px;padding:8px;margin-top:10px;display:none}
 .prog-pick-btn{display:block;width:100%;text-align:left;background:transparent;border:none;color:var(--text);font-size:14px;padding:8px 12px;cursor:pointer;border-radius:6px;transition:.15s;font-family:inherit}
 .prog-pick-btn:hover{background:rgba(238,0,116,0.12);color:var(--pink)}
+.cat-section{margin-bottom:20px}
+.cat-heading{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(238,0,116,0.15);margin-bottom:4px}
+.cat-label{font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--pink);font-weight:700}
+.cat-heading-actions{display:flex;gap:6px}
+.cat-pick-btn{display:block;width:100%;text-align:left;background:transparent;border:none;color:var(--text);font-size:14px;padding:8px 12px;cursor:pointer;border-radius:6px;transition:.15s;font-family:inherit}
+.cat-pick-btn:hover{background:rgba(238,0,116,0.12);color:var(--pink)}
+.drag-handle{cursor:grab;color:var(--muted);padding-right:8px;font-size:16px;opacity:0.5}
+.drag-handle:hover{opacity:1}
+.track-row.drag-over{border-top:2px solid var(--pink)}
+.track-row.dragging{opacity:0.35}
 </style>
 </head>
 <body>
@@ -204,6 +214,14 @@ progress::-webkit-progress-value{background:linear-gradient(90deg,#ee0074,#ff4da
       </div>
     </div>
     <div class="card">
+      <h3>Categories</h3>
+      <div class="form-row" style="margin-bottom:14px">
+        <input type="text" id="cat-name-input" placeholder="New category name…">
+        <button class="btn" onclick="createCategory()">Add Category</button>
+      </div>
+      <div id="cat-list"></div>
+    </div>
+    <div class="card">
       <h3>All Tracks</h3>
       <div id="tracks-list"><p style="color:var(--muted);font-size:14px">Loading...</p></div>
     </div>
@@ -228,7 +246,7 @@ progress::-webkit-progress-value{background:linear-gradient(90deg,#ee0074,#ff4da
 
 <script>
 const HOST=location.origin;
-let allTracks=[],allPrograms=[];
+let allTracks=[],allPrograms=[],allCategories=[];
 
 function showPage(p,el){
   document.querySelectorAll('.page').forEach(e=>e.classList.remove('active'));
@@ -247,23 +265,94 @@ function logout(){fetch('/api/logout',{method:'POST'}).then(()=>location.reload(
 
 // ── Audio Library ──────────────────────────────────────────
 async function loadTracks(){
-  const [tr,pr]=await Promise.all([fetch('/api/tracks'),fetch('/api/programs')]);
-  allTracks=await tr.json();allPrograms=await pr.json();renderTracks();
+  const [tr,pr,cr]=await Promise.all([fetch('/api/tracks'),fetch('/api/programs'),fetch('/api/categories')]);
+  allTracks=await tr.json();allPrograms=await pr.json();allCategories=await cr.json();
+  renderCategoryList();
+  renderTracks();
 }
 function renderTracks(){
   const el=document.getElementById('tracks-list');
   if(!allTracks.length){el.innerHTML='<p style="color:var(--muted);font-size:14px">No tracks yet. Upload your first recording above.</p>';return;}
-  el.innerHTML=allTracks.map(t=>`
+  const trackRow=t=>`
     <div class="track-lib-row">
       <div class="track-lib-title">${esc(t.title)}</div>
       <div class="track-lib-file">${esc(t.filename)}</div>
       <div class="track-lib-actions">
+        <button class="btn btn-sm btn-ghost" onclick="toggleCategoryPicker('${t.id}')">Category ▾</button>
         <button class="btn btn-sm" onclick="toggleProgramPicker('${t.id}')">Add to Program ▾</button>
         <button class="btn btn-sm btn-ghost" onclick="copyLink(HOST+'/track/${t.id}')">Copy Link</button>
         <button class="btn btn-sm btn-danger" onclick="deleteTrack('${t.id}')">Delete</button>
       </div>
       <div class="prog-picker" id="pp-${t.id}"></div>
-    </div>`).join('');
+      <div class="prog-picker" id="cp-${t.id}"></div>
+    </div>`;
+  let html='';
+  allCategories.forEach(cat=>{
+    const catTracks=allTracks.filter(t=>t.categoryId===cat.id);
+    if(!catTracks.length)return;
+    html+=`<div class="cat-section">
+      <div class="cat-heading">
+        <span class="cat-label">${esc(cat.name)} (${catTracks.length})</span>
+        <span class="cat-heading-actions">
+          <button class="btn btn-sm btn-ghost" onclick="renameCategory('${cat.id}','${esc(cat.name)}')">✏ Rename</button>
+          <button class="btn btn-sm btn-ghost" onclick="deleteCategory('${cat.id}')">🗑 Delete</button>
+        </span>
+      </div>${catTracks.map(trackRow).join('')}</div>`;
+  });
+  const uncategorized=allTracks.filter(t=>!t.categoryId||!allCategories.find(c=>c.id===t.categoryId));
+  if(uncategorized.length){
+    html+=`<div class="cat-section">
+      <div class="cat-heading"><span class="cat-label">Uncategorized (${uncategorized.length})</span></div>
+      ${uncategorized.map(trackRow).join('')}
+    </div>`;
+  }
+  el.innerHTML=html;
+}
+
+function renderCategoryList(){
+  const el=document.getElementById('cat-list');
+  if(!el)return;
+  if(!allCategories.length){el.innerHTML='<p style="color:var(--muted);font-size:13px">No categories yet.</p>';return;}
+  el.innerHTML='<p style="color:var(--muted);font-size:13px">'+allCategories.map(c=>esc(c.name)).join(' &nbsp;·&nbsp; ')+'</p>';
+}
+
+async function createCategory(){
+  const inp=document.getElementById('cat-name-input');
+  const name=inp.value.trim();
+  if(!name){toast('Enter a category name.');return;}
+  await fetch('/api/categories',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});
+  inp.value='';loadTracks();toast('Category created!');
+}
+
+async function renameCategory(id,current){
+  const name=prompt('Rename category:',current);
+  if(!name||name===current)return;
+  await fetch('/api/categories/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});
+  loadTracks();toast('Category renamed.');
+}
+
+async function deleteCategory(id){
+  if(!confirm('Delete this category? Tracks will become uncategorized.'))return;
+  await fetch('/api/categories/'+id,{method:'DELETE'});
+  loadTracks();toast('Category deleted.');
+}
+
+function toggleCategoryPicker(tid){
+  const picker=document.getElementById('cp-'+tid);
+  const isOpen=picker.style.display==='block';
+  document.querySelectorAll('.prog-picker').forEach(p=>p.style.display='none');
+  if(isOpen)return;
+  const track=allTracks.find(t=>t.id===tid);
+  const options=allCategories.map(c=>`<button class="cat-pick-btn${track&&track.categoryId===c.id?' active':''}" onclick="setTrackCategory('${tid}','${c.id}')">${esc(c.name)}${track&&track.categoryId===c.id?' ✓':''}</button>`).join('');
+  picker.innerHTML=options||'<p style="font-size:13px;color:var(--muted);padding:6px">No categories yet — create one above.</p>';
+  if(track&&track.categoryId) picker.innerHTML+='<button class="cat-pick-btn" onclick="setTrackCategory(''+tid+'','')">Remove from category</button>';
+  picker.style.display='block';
+}
+
+async function setTrackCategory(tid,catId){
+  await fetch('/api/tracks/'+tid,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({categoryId:catId||null})});
+  document.querySelectorAll('.prog-picker').forEach(p=>p.style.display='none');
+  loadTracks();toast('Category updated.');
 }
 
 function toggleProgramPicker(tid){
@@ -338,8 +427,12 @@ function renderPrograms(){
     const link=HOST+'/listen/'+pg.token;
     const currentIds=pg.trackIds||[];
     const currentTracks=currentIds.map((tid,i)=>tMap[tid]?`
-      <div class="track-row">
-        <span><span class="track-num">${i+1}.</span>${esc(tMap[tid].title)}</span>
+      <div class="track-row" draggable="true" data-prog="${pg.id}" data-tid="${tid}"
+           ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="dropTrack(event)" ondragleave="dragLeave(event)">
+        <span style="display:flex;align-items:center">
+          <span class="drag-handle">⠿</span>
+          <span class="track-num">${i+1}.</span>${esc(tMap[tid].title)}
+        </span>
         <button class="btn btn-sm btn-ghost" onclick="removeTrack('${pg.id}','${tid}')">Remove</button>
       </div>`:'').join('');
     return `
@@ -394,6 +487,26 @@ async function removeTrack(pid,tid){
 }
 
 
+let _dragSrc=null;
+function dragStart(e){_dragSrc=e.currentTarget;e.dataTransfer.effectAllowed='move';setTimeout(()=>_dragSrc&&_dragSrc.classList.add('dragging'),0);}
+function dragOver(e){e.preventDefault();e.dataTransfer.dropEffect='move';document.querySelectorAll('.track-row').forEach(r=>r.classList.remove('drag-over'));if(e.currentTarget!==_dragSrc)e.currentTarget.classList.add('drag-over');}
+function dragLeave(e){e.currentTarget.classList.remove('drag-over');}
+async function dropTrack(e){
+  e.preventDefault();
+  document.querySelectorAll('.track-row').forEach(r=>{r.classList.remove('drag-over');r.classList.remove('dragging');});
+  const target=e.currentTarget;
+  if(!_dragSrc||_dragSrc===target)return;
+  const pid=_dragSrc.dataset.prog;
+  if(target.dataset.prog!==pid)return;
+  const srcTid=_dragSrc.dataset.tid,tgtTid=target.dataset.tid;
+  const pg=allPrograms.find(p=>p.id===pid);
+  const ids=[...(pg.trackIds||[])];
+  const fi=ids.indexOf(srcTid),ti=ids.indexOf(tgtTid);
+  if(fi<0||ti<0)return;
+  ids.splice(fi,1);ids.splice(ti,0,srcTid);
+  await fetch('/api/programs/'+pid,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({trackIds:ids})});
+  loadPrograms();toast('Order saved.');
+}
 function copyLink(url){navigator.clipboard.writeText(url).then(()=>toast('Link copied!'));}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
@@ -747,7 +860,7 @@ p{color:#c084a0;font-size:16px}
 # ─────────────────────────────────────────────────────────────
 def load_db():
     if not DATA_FILE.exists():
-        return {"tracks": [], "programs": []}
+        return {"tracks": [], "programs": [], "categories": []}
     with open(DATA_FILE) as f:
         return json.load(f)
 
@@ -929,6 +1042,9 @@ class HypnosisHandler(http.server.BaseHTTPRequestHandler):
             track_map = {t["id"]: t for t in db["tracks"]}
             tracks = [track_map[tid] for tid in program.get("trackIds", []) if tid in track_map]
             self.send_json({"clientName": program["name"], "playlistName": program["name"], "tracks": tracks})
+        elif path == "/api/categories":
+            if not self.require_auth(): return
+            self.send_json(load_db().get("categories", []))
         elif path.startswith("/api/track/"):
             track_id = path[len("/api/track/"):]
             db = load_db()
@@ -951,6 +1067,9 @@ class HypnosisHandler(http.server.BaseHTTPRequestHandler):
         elif path == "/api/programs":
             if not self.require_auth(): return
             self.handle_create_program()
+        elif path == "/api/categories":
+            if not self.require_auth(): return
+            self.handle_create_category()
         else:
             self.send_error_json("Not found", 404)
 
@@ -961,6 +1080,12 @@ class HypnosisHandler(http.server.BaseHTTPRequestHandler):
         if path.startswith("/api/programs/"):
             if not self.require_auth(): return
             self.handle_update_program(path[len("/api/programs/"):])
+        elif path.startswith("/api/categories/"):
+            if not self.require_auth(): return
+            self.handle_update_category(path[len("/api/categories/"):])
+        elif path.startswith("/api/tracks/"):
+            if not self.require_auth(): return
+            self.handle_update_track(path[len("/api/tracks/"):])
         else:
             self.send_error_json("Not found", 404)
 
@@ -974,10 +1099,55 @@ class HypnosisHandler(http.server.BaseHTTPRequestHandler):
         elif path.startswith("/api/programs/"):
             if not self.require_auth(): return
             self.handle_delete_program(path[len("/api/programs/"):])
+        elif path.startswith("/api/categories/"):
+            if not self.require_auth(): return
+            self.handle_delete_category(path[len("/api/categories/"):])
         else:
             self.send_error_json("Not found", 404)
 
     # ── Handlers ────────────────────────────────────────────
+
+    def handle_create_category(self):
+        body = self.read_json_body()
+        name = body.get("name", "").strip()
+        if not name:
+            self.send_error_json("Name required"); return
+        db = load_db()
+        cat = {"id": new_id(), "name": name}
+        db.setdefault("categories", []).append(cat)
+        save_db(db)
+        self.send_json(cat, 201)
+
+    def handle_update_category(self, cat_id):
+        body = self.read_json_body()
+        db = load_db()
+        cat = next((c for c in db.get("categories", []) if c["id"] == cat_id), None)
+        if not cat:
+            self.send_error_json("Not found", 404); return
+        if "name" in body:
+            cat["name"] = body["name"].strip()
+        save_db(db)
+        self.send_json(cat)
+
+    def handle_delete_category(self, cat_id):
+        db = load_db()
+        db["categories"] = [c for c in db.get("categories", []) if c["id"] != cat_id]
+        for t in db["tracks"]:
+            if t.get("categoryId") == cat_id:
+                t["categoryId"] = None
+        save_db(db)
+        self.send_json({"ok": True})
+
+    def handle_update_track(self, track_id):
+        body = self.read_json_body()
+        db = load_db()
+        track = next((t for t in db["tracks"] if t["id"] == track_id), None)
+        if not track:
+            self.send_error_json("Not found", 404); return
+        if "categoryId" in body:
+            track["categoryId"] = body["categoryId"]
+        save_db(db)
+        self.send_json(track)
 
     def handle_login(self):
         body = self.read_json_body()
