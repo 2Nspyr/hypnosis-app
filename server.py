@@ -345,7 +345,7 @@ function toggleCategoryPicker(tid){
   const track=allTracks.find(t=>t.id===tid);
   const options=allCategories.map(c=>`<button class="cat-pick-btn${track&&track.categoryId===c.id?' active':''}" onclick="setTrackCategory('${tid}','${c.id}')">${esc(c.name)}${track&&track.categoryId===c.id?' ✓':''}</button>`).join('');
   picker.innerHTML=options||'<p style="font-size:13px;color:var(--muted);padding:6px">No categories yet — create one above.</p>';
-  if(track&&track.categoryId) picker.innerHTML+='<button class="cat-pick-btn" onclick="setTrackCategory(''+tid+'','')">Remove from category</button>';
+  if(track&&track.categoryId) picker.innerHTML+=`<button class="cat-pick-btn" onclick="setTrackCategory('${tid}','')">Remove from category</button>`;
   picker.style.display='block';
 }
 
