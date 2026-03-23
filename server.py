@@ -1291,7 +1291,7 @@ class HypnosisHandler(http.server.BaseHTTPRequestHandler):
         db = load_db()
         if "programs" not in db:
             db["programs"] = []
-        token = secrets.token_urlsafe(24)
+        token = secrets.token_hex(5)
         program = {"id": new_id(), "name": name, "token": token, "trackIds": body.get("trackIds", [])}
         db["programs"].append(program)
         save_db(db)
