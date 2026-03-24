@@ -438,12 +438,15 @@ function renderPrograms(){
     return `
       <div class="prog-card">
         <div class="prog-header">
-          <span class="prog-name" onclick="toggleProgram('${pg.id}')">
+          <span class="prog-name" id="prog-name-${pg.id}" onclick="toggleProgram('${pg.id}')">
             <span class="prog-chevron" id="chev-${pg.id}">▶</span>
             ${esc(pg.name)}
             <span style="font-size:12px;color:var(--muted);font-weight:400">(${currentIds.length} track${currentIds.length!==1?'s':''})</span>
           </span>
-          <button class="btn btn-sm btn-danger" onclick="deleteProgram('${pg.id}')">Delete</button>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-sm btn-ghost" onclick="event.stopPropagation();startRename('${pg.id}',${JSON.stringify(pg.name)})">Rename</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteProgram('${pg.id}')">Delete</button>
+          </div>
         </div>
         <div class="prog-body" id="body-${pg.id}">
           <div class="prog-link-row">
@@ -477,6 +480,36 @@ async function deleteProgram(id){
   if(!confirm('Delete this program? The listening link will stop working.'))return;
   await fetch('/api/programs/'+id,{method:'DELETE'});
   loadPrograms();toast('Program deleted.');
+}
+
+function startRename(id,currentName){
+  const nameEl=document.getElementById('prog-name-'+id);
+  if(!nameEl)return;
+  nameEl.onclick=null;
+  const inp=document.createElement('input');
+  inp.id='ri-'+id;inp.value=currentName;
+  inp.style.cssText='background:rgba(255,255,255,0.08);border:1px solid var(--pink);color:var(--text);border-radius:6px;padding:4px 8px;font-size:14px;width:200px;margin-right:6px';
+  inp.onkeydown=function(e){if(e.key==='Enter')saveRename(id);};
+  const saveBtn=document.createElement('button');
+  saveBtn.className='btn btn-sm';saveBtn.textContent='Save';
+  saveBtn.onclick=function(){saveRename(id);};
+  const cancelBtn=document.createElement('button');
+  cancelBtn.className='btn btn-sm btn-ghost';cancelBtn.textContent='Cancel';
+  cancelBtn.onclick=function(){loadPrograms();};
+  const wrap=document.createElement('div');
+  wrap.style.cssText='display:flex;align-items:center;gap:6px;flex-wrap:wrap';
+  wrap.onclick=function(e){e.stopPropagation();};
+  wrap.appendChild(inp);wrap.appendChild(saveBtn);wrap.appendChild(cancelBtn);
+  nameEl.innerHTML='';nameEl.appendChild(wrap);
+  inp.focus();inp.select();
+}
+async function saveRename(id){
+  const inp=document.getElementById('ri-'+id);
+  if(!inp)return;
+  const name=inp.value.trim();
+  if(!name){toast('Name cannot be empty.');return;}
+  await fetch('/api/programs/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});
+  loadPrograms();toast('Program renamed!');
 }
 
 async function removeTrack(pid,tid){
@@ -709,6 +742,7 @@ function renderList(){
       <div class="track-dur" id="dur-${i}">--:--</div>
     </div>`).join('');
   loadDurations();
+  initTouchDrag();
 }
 
 let _plDragSrc=null;
@@ -720,6 +754,65 @@ async function plDrop(e){
   document.querySelectorAll('.track-item').forEach(r=>{r.classList.remove('drag-over');r.classList.remove('dragging');});
   if(!_plDragSrc||_plDragSrc===e.currentTarget)return;
   const fi=parseInt(_plDragSrc.dataset.idx),ti=parseInt(e.currentTarget.dataset.idx);
+  const curTrack=tracks[cur];
+  const moved=tracks.splice(fi,1)[0];
+  tracks.splice(ti,0,moved);
+  cur=tracks.indexOf(curTrack);
+  renderList();
+  const ctr=document.getElementById('track-counter');
+  if(ctr&&tracks.length>1)ctr.textContent='Track '+(cur+1)+' of '+tracks.length;
+  if(!isSingle){
+    await fetch('/api/client/'+token,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({trackIds:tracks.map(t=>t.id)})});
+  }
+}
+
+// ── Touch drag (mobile) ───────────────────────────────────────
+let _tDragEl=null,_tOffY=0,_tGhost=null;
+function initTouchDrag(){
+  document.querySelectorAll('.track-drag').forEach(handle=>{
+    handle.removeEventListener('touchstart',_tdStart);
+    handle.addEventListener('touchstart',_tdStart,{passive:false});
+  });
+}
+function _tdStart(e){
+  e.preventDefault();e.stopPropagation();
+  const item=e.currentTarget.closest('.track-item');
+  if(!item)return;
+  _tDragEl=item;
+  const rect=item.getBoundingClientRect();
+  _tOffY=e.touches[0].clientY-rect.top;
+  _tGhost=item.cloneNode(true);
+  _tGhost.style.cssText='position:fixed;left:'+rect.left+'px;width:'+rect.width+'px;top:'+(e.touches[0].clientY-_tOffY)+'px;opacity:0.88;z-index:9999;pointer-events:none;border-radius:10px;background:var(--card);border:1px solid var(--pink);box-shadow:0 4px 24px rgba(238,0,116,0.35);';
+  document.body.appendChild(_tGhost);
+  item.style.opacity='0.3';
+  document.addEventListener('touchmove',_tdMove,{passive:false});
+  document.addEventListener('touchend',_tdEnd,{passive:false});
+}
+function _tdMove(e){
+  e.preventDefault();
+  if(!_tGhost||!_tDragEl)return;
+  const y=e.touches[0].clientY;
+  _tGhost.style.top=(y-_tOffY)+'px';
+  document.querySelectorAll('.track-item').forEach(r=>r.classList.remove('drag-over'));
+  const els=document.elementsFromPoint(e.touches[0].clientX,y);
+  const target=els.find(el=>el.classList&&el.classList.contains('track-item')&&el!==_tDragEl);
+  if(target)target.classList.add('drag-over');
+}
+async function _tdEnd(e){
+  document.removeEventListener('touchmove',_tdMove);
+  document.removeEventListener('touchend',_tdEnd);
+  if(_tGhost){_tGhost.remove();_tGhost=null;}
+  document.querySelectorAll('.track-item').forEach(r=>r.classList.remove('drag-over'));
+  if(!_tDragEl)return;
+  _tDragEl.style.opacity='';
+  const touch=e.changedTouches[0];
+  const els=document.elementsFromPoint(touch.clientX,touch.clientY);
+  const target=els.find(el=>el.classList&&el.classList.contains('track-item')&&el!==_tDragEl);
+  const fi=parseInt(_tDragEl.dataset.idx);
+  _tDragEl=null;
+  if(!target)return;
+  const ti=parseInt(target.dataset.idx);
+  if(fi===ti)return;
   const curTrack=tracks[cur];
   const moved=tracks.splice(fi,1)[0];
   tracks.splice(ti,0,moved);
