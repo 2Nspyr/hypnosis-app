@@ -444,7 +444,7 @@ function renderPrograms(){
             <span style="font-size:12px;color:var(--muted);font-weight:400">(${currentIds.length} track${currentIds.length!==1?'s':''})</span>
           </span>
           <div style="display:flex;gap:6px">
-            <button class="btn btn-sm btn-ghost" onclick="event.stopPropagation();startRename('${pg.id}',${JSON.stringify(pg.name)})">Rename</button>
+            <button class="btn btn-sm btn-ghost" onclick="event.stopPropagation();startRename('${pg.id}',${JSON.stringify(pg.name).replace(/"/g,'&quot;')})">Rename</button>
             <button class="btn btn-sm btn-danger" onclick="deleteProgram('${pg.id}')">Delete</button>
           </div>
         </div>
